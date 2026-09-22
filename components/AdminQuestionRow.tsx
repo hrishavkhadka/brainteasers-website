@@ -16,15 +16,39 @@ export default function AdminQuestionRow({
   const [busy, setBusy] = useState<"approve" | "reject" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState(false);
+  const [rejecting, setRejecting] = useState(false);
+  const [reason, setReason] = useState("");
 
-  async function updateStatus(status: "published" | "rejected") {
+  async function approve() {
     setError(null);
-    setBusy(status === "published" ? "approve" : "reject");
+    setBusy("approve");
     const supabase = createClient();
 
     const { error } = await supabase
       .from("questions")
-      .update({ status })
+      .update({ status: "published", rejection_reason: null })
+      .eq("id", question.id);
+
+    setBusy(null);
+
+    if (error) {
+      setError(error.message);
+      return;
+    }
+    router.refresh();
+  }
+
+  async function confirmReject() {
+    setError(null);
+    setBusy("reject");
+    const supabase = createClient();
+
+    const { error } = await supabase
+      .from("questions")
+      .update({
+        status: "rejected",
+        rejection_reason: reason.trim() || null,
+      })
       .eq("id", question.id);
 
     setBusy(null);
@@ -131,29 +155,76 @@ export default function AdminQuestionRow({
 
       {/* Actions */}
       <div className="flex flex-wrap gap-2 mt-3">
-        <button
-          type="button"
-          onClick={() => setPreview((p) => !p)}
-          className="text-sm px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
-        >
-          {preview ? "Hide details" : "Show details"}
-        </button>
-        <button
-          type="button"
-          disabled={busy !== null}
-          onClick={() => updateStatus("published")}
-          className="text-sm px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-medium"
-        >
-          {busy === "approve" ? "Approving..." : "Approve"}
-        </button>
-        <button
-          type="button"
-          disabled={busy !== null}
-          onClick={() => updateStatus("rejected")}
-          className="text-sm px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white font-medium"
-        >
-          {busy === "reject" ? "Rejecting..." : "Reject"}
-        </button>
+        {error && (
+          <p className="text-xs text-red-600 dark:text-red-400 mt-2">{error}</p>
+        )}
+
+        {rejecting && (
+          <div className="mt-3 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40">
+            <label className="block text-xs font-medium text-red-800 dark:text-red-300 mb-1">
+              Reason for rejection (optional — the author will see this)
+            </label>
+            <textarea
+              rows={2}
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="e.g. Duplicate of an existing question, or answer needs clarification."
+              className="w-full px-2 py-1.5 text-sm rounded border border-red-300 dark:border-red-800 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-500"
+            />
+          </div>
+        )}
+
+        <div className="flex flex-wrap gap-2 mt-3">
+          <button
+            type="button"
+            onClick={() => setPreview((p) => !p)}
+            className="text-sm px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
+          >
+            {preview ? "Hide details" : "Show details"}
+          </button>
+
+          <button
+            type="button"
+            disabled={busy !== null}
+            onClick={approve}
+            className="text-sm px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-medium"
+          >
+            {busy === "approve" ? "Approving..." : "Approve"}
+          </button>
+
+          {!rejecting ? (
+            <button
+              type="button"
+              disabled={busy !== null}
+              onClick={() => setRejecting(true)}
+              className="text-sm px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white font-medium"
+            >
+              Reject
+            </button>
+          ) : (
+            <>
+              <button
+                type="button"
+                disabled={busy !== null}
+                onClick={confirmReject}
+                className="text-sm px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white font-medium"
+              >
+                {busy === "reject" ? "Rejecting..." : "Confirm reject"}
+              </button>
+              <button
+                type="button"
+                disabled={busy !== null}
+                onClick={() => {
+                  setRejecting(false);
+                  setReason("");
+                }}
+                className="text-sm px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

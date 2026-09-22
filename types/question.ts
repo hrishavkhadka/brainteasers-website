@@ -9,6 +9,7 @@ export type QuestionOption = {
 };
 
 export type QuestionFormat = "free_response" | "multiple_choice";
+export type QuestionStatus = "draft" | "pending" | "published" | "rejected";
 
 export type Question = {
   id: string;
@@ -33,4 +34,6 @@ export type Question = {
   correct_option_id: string | null;
   source_text: string | null; // new
   source_url: string | null; // new
+  status: QuestionStatus;
+  rejection_reason: string | null;
 };
