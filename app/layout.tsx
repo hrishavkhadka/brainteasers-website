@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import Header from "@/components/Header";
 
 export const metadata: Metadata = {
   title: "IQ Questions",
@@ -31,6 +32,7 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors">
+        <Header />
         {children}
       </body>
     </html>

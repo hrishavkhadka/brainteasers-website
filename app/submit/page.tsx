@@ -1,0 +1,31 @@
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import SubmitQuestionForm from "@/components/SubmitQuestionForm";
+
+export default async function SubmitPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/auth");
+  }
+
+  return (
+    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 py-6 px-4">
+      <div className="max-w-2xl mx-auto mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">
+          Submit a question
+        </h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          Share a puzzle or reasoning question with the community.
+        </p>
+      </div>
+
+      <div className="max-w-2xl mx-auto">
+        <SubmitQuestionForm userId={user.id} />
+      </div>
+    </main>
+  );
+}

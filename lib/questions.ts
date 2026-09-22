@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import { createClient } from "@/lib/supabase/server";
 import type { Question } from "@/types/question";
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -14,6 +14,7 @@ export async function getQuestions(
   page: number = 1,
   pageSize: number = DEFAULT_PAGE_SIZE,
 ): Promise<QuestionsPage> {
+  const supabase = await createClient();
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
