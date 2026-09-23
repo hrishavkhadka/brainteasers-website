@@ -10,6 +10,7 @@ import {
   type ReportTargetType,
 } from "@/lib/reports-client";
 import { useSignInPrompt } from "./auth/SignInPromptProvider";
+import { useSiteSettings } from "./SiteSettingsProvider";
 
 export default function ReportModal({
   open,
@@ -26,12 +27,15 @@ export default function ReportModal({
 }) {
   const router = useRouter();
   const { open: openSignIn } = useSignInPrompt();
+  const { flags } = useSiteSettings();
   const [reason, setReason] = useState<ReportReason>("spam");
   const [details, setDetails] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  const paused = flags.reports_paused;
 
   useEffect(() => {
     setMounted(true);
@@ -68,6 +72,11 @@ export default function ReportModal({
     e.preventDefault();
     setError(null);
 
+    if (paused) {
+      setError("Reporting is paused at the moment. Please try again later.");
+      return;
+    }
+
     if (!userId) {
       handleClose();
       openSignIn("Sign in to report content.");
@@ -86,7 +95,16 @@ export default function ReportModal({
       setSubmitted(true);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to submit report.");
+      const msg =
+        err instanceof Error ? err.message : "Failed to submit report.";
+      if (
+        msg.toLowerCase().includes("row-level security") ||
+        msg.includes("violates row-level")
+      ) {
+        setError("Reporting is paused at the moment. Please try again later.");
+      } else {
+        setError(msg);
+      }
     } finally {
       setBusy(false);
     }
@@ -115,7 +133,23 @@ export default function ReportModal({
           ×
         </button>
 
-        {submitted ? (
+        {paused ? (
+          <div className="py-4 text-center">
+            <p className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-2">
+              Reporting is paused
+            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Please try again later.
+            </p>
+            <button
+              type="button"
+              onClick={handleClose}
+              className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg"
+            >
+              Close
+            </button>
+          </div>
+        ) : submitted ? (
           <div className="py-4 text-center">
             <p className="text-base font-semibold text-emerald-700 dark:text-emerald-400 mb-2">
               Report submitted

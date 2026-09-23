@@ -2,8 +2,13 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useSiteSettings } from "./SiteSettingsProvider";
 
-type SettingKey = "submissions_paused" | "signups_paused";
+type SettingKey =
+  | "submissions_paused"
+  | "signups_paused"
+  | "reports_paused"
+  | "comments_paused";
 
 export default function SiteSettingsToggle({
   settingKey,
@@ -16,6 +21,7 @@ export default function SiteSettingsToggle({
   description: string;
   initialValue: boolean;
 }) {
+  const { refresh } = useSiteSettings();
   const [value, setValue] = useState(initialValue);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +29,7 @@ export default function SiteSettingsToggle({
   async function toggle(next: boolean) {
     setError(null);
     setBusy(true);
-    setValue(next); // optimistic
+    setValue(next);
 
     const supabase = createClient();
     const { error } = await supabase
@@ -34,9 +40,13 @@ export default function SiteSettingsToggle({
     setBusy(false);
 
     if (error) {
-      setValue(!next); // revert
+      setValue(!next);
       setError(error.message);
+      return;
     }
+
+    // Refresh the shared settings so client components see the change
+    await refresh();
   }
 
   return (

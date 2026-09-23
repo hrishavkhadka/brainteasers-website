@@ -97,6 +97,18 @@ export default async function AdminPage() {
             description="When on, new users cannot create accounts. Existing users can still sign in."
             initialValue={settings.signups_paused}
           />
+          <SiteSettingsToggle
+            settingKey="comments_paused"
+            label="Pause comments"
+            description="When on, no user (except admins) can post new comments or replies."
+            initialValue={settings.comments_paused}
+          />
+          <SiteSettingsToggle
+            settingKey="reports_paused"
+            label="Pause reports"
+            description="When on, users cannot submit reports on questions or comments."
+            initialValue={settings.reports_paused}
+          />
         </div>
       </div>
 

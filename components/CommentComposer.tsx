@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createComment } from "@/lib/comments-client";
 import { useSignInPrompt } from "./auth/SignInPromptProvider";
+import { useSiteSettings } from "./SiteSettingsProvider";
 
 export default function CommentComposer({
   questionId,
@@ -22,15 +23,23 @@ export default function CommentComposer({
 }) {
   const router = useRouter();
   const { open } = useSignInPrompt();
+  const { flags } = useSiteSettings();
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const paused = flags.comments_paused;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
     if (!userId) {
       open("Sign in to comment.");
+      return;
+    }
+
+    if (paused) {
+      setError("Comments are paused at the moment. Please try again later.");
       return;
     }
 
@@ -48,10 +57,29 @@ export default function CommentComposer({
       router.refresh();
       onDone?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to post comment.");
+      const msg =
+        err instanceof Error ? err.message : "Failed to post comment.";
+      if (
+        msg.toLowerCase().includes("row-level security") ||
+        msg.includes("violates row-level")
+      ) {
+        setError("Comments are paused at the moment. Please try again later.");
+      } else {
+        setError(msg);
+      }
     } finally {
       setBusy(false);
     }
+  }
+
+  if (paused) {
+    return (
+      <div className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4 text-center">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          Comments are paused at the moment. Please try again later.
+        </p>
+      </div>
+    );
   }
 
   return (

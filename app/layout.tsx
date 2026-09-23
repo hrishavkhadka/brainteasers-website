@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Header from "@/components/Header";
 import { SignInPromptProvider } from "@/components/auth/SignInPromptProvider";
+import { SiteSettingsProvider } from "@/components/SiteSettingsProvider";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -51,14 +52,16 @@ export default async function RootLayout({
         />
       </head>
       <body className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors">
-        <SignInPromptProvider>
-          <Header
-            user={user ? { id: user.id, email: user.email ?? "" } : null}
-            username={username}
-            isAdmin={isAdmin}
-          />
-          {children}
-        </SignInPromptProvider>
+        <SiteSettingsProvider>
+          <SignInPromptProvider>
+            <Header
+              user={user ? { id: user.id, email: user.email ?? "" } : null}
+              username={username}
+              isAdmin={isAdmin}
+            />
+            {children}
+          </SignInPromptProvider>
+        </SiteSettingsProvider>
       </body>
     </html>
   );
