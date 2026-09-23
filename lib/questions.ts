@@ -25,7 +25,31 @@ const QUESTION_COLUMNS = [
   "featured_order",
   "upvotes",
   "downvotes",
+  "comment_count",
 ].join(",");
+
+async function attachUsernames(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  rows: Question[],
+): Promise<Question[]> {
+  const authorIds = Array.from(
+    new Set(rows.map((r) => r.author_id).filter((id): id is string => !!id)),
+  );
+
+  const usernameMap = new Map<string, string>();
+  if (authorIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, username")
+      .in("id", authorIds);
+    profiles?.forEach((p) => usernameMap.set(p.id, p.username));
+  }
+
+  return rows.map((q) => ({
+    ...q,
+    authorUsername: q.author_id ? (usernameMap.get(q.author_id) ?? null) : null,
+  }));
+}
 
 export type QuestionsPage = {
   questions: Question[];
@@ -55,25 +79,7 @@ export async function getQuestions(
   }
 
   const rows = (data ?? []) as unknown as Question[];
-
-  // Fetch usernames for the authors of these questions (one extra query)
-  const authorIds = Array.from(
-    new Set(rows.map((r) => r.author_id).filter((id): id is string => !!id)),
-  );
-
-  const usernameMap = new Map<string, string>();
-  if (authorIds.length > 0) {
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("id, username")
-      .in("id", authorIds);
-    profiles?.forEach((p) => usernameMap.set(p.id, p.username));
-  }
-
-  const questions: Question[] = rows.map((q) => ({
-    ...q,
-    authorUsername: q.author_id ? (usernameMap.get(q.author_id) ?? null) : null,
-  }));
+  const questions = await attachUsernames(supabase, rows);
 
   const total = count ?? 0;
   return {
@@ -82,4 +88,21 @@ export async function getQuestions(
     totalPages: Math.max(1, Math.ceil(total / pageSize)),
     page,
   };
+}
+
+export async function getQuestion(id: string): Promise<Question | null> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("questions")
+    .select(QUESTION_COLUMNS)
+    .eq("id", id)
+    .eq("status", "published")
+    .maybeSingle();
+
+  if (error || !data) return null;
+
+  const rows = [data as unknown as Question];
+  const [withUsernames] = await attachUsernames(supabase, rows);
+  return withUsernames;
 }

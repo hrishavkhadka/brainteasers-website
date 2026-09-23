@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import type { Question } from "@/types/question";
 import type { VoteValue } from "@/lib/votes";
 import ZoomableImage from "./ZoomableImage";
@@ -67,9 +68,12 @@ export default function QuestionCard({
       </div>
 
       {question.question_text && (
-        <p className="text-gray-900 dark:text-gray-100 text-base sm:text-lg mb-3 leading-relaxed whitespace-pre-wrap">
+        <Link
+          href={`/question/${question.id}`}
+          className="block text-gray-900 dark:text-gray-100 text-base sm:text-lg mb-3 leading-relaxed whitespace-pre-wrap hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
+        >
           {question.question_text}
-        </p>
+        </Link>
       )}
 
       {question.question_image_url && (
@@ -183,6 +187,22 @@ export default function QuestionCard({
           </p>
         </div>
       )}
+
+      <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700/60 flex items-center justify-between text-xs">
+        <Link
+          href={`/question/${question.id}`}
+          className="text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+        >
+          💬 {question.comment_count}{" "}
+          {question.comment_count === 1 ? "comment" : "comments"}
+        </Link>
+        <span className="text-gray-400 dark:text-gray-500">
+          {new Date(question.created_at).toLocaleDateString(undefined, {
+            month: "short",
+            day: "numeric",
+          })}
+        </span>
+      </div>
     </article>
   );
 }
