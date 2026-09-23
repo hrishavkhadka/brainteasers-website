@@ -15,12 +15,8 @@ const CATEGORIES = [
 ] as const;
 
 type Category = (typeof CATEGORIES)[number];
-type Format = "free_response" | "multiple_choice";
 
 type HintDraft = { text: string; image_url: string | null };
-type OptionDraft = { id: string; text: string };
-
-const OPTION_IDS = ["a", "b", "c", "d"];
 
 export default function SubmitQuestionForm({ userId }: { userId: string }) {
   const router = useRouter();
@@ -42,16 +38,6 @@ export default function SubmitQuestionForm({ userId }: { userId: string }) {
   const [category, setCategory] = useState<Category>("logical");
   const [difficulty, setDifficulty] = useState(1);
   const [qualification, setQualification] = useState("");
-
-  // Format
-  const [format, setFormat] = useState<Format>("free_response");
-  const [options, setOptions] = useState<OptionDraft[]>([
-    { id: "a", text: "" },
-    { id: "b", text: "" },
-    { id: "c", text: "" },
-    { id: "d", text: "" },
-  ]);
-  const [correctOptionId, setCorrectOptionId] = useState<string>("a");
 
   // Source
   const [sourceText, setSourceText] = useState("");
@@ -75,15 +61,10 @@ export default function SubmitQuestionForm({ userId }: { userId: string }) {
     setHints((h) => h.filter((_, i) => i !== index));
   }
 
-  function updateOption(id: string, text: string) {
-    setOptions((opts) => opts.map((o) => (o.id === id ? { ...o, text } : o)));
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
-    // Validation
     if (!questionText.trim() && !questionImage) {
       setError("Add a question text or image.");
       return;
@@ -92,17 +73,6 @@ export default function SubmitQuestionForm({ userId }: { userId: string }) {
       setError("Add an answer text or image.");
       return;
     }
-    if (format === "multiple_choice") {
-      const filled = options.filter((o) => o.text.trim());
-      if (filled.length < 2) {
-        setError("Multiple choice needs at least 2 filled options.");
-        return;
-      }
-      if (!filled.some((o) => o.id === correctOptionId)) {
-        setError("The correct option must be one of the filled options.");
-        return;
-      }
-    }
 
     setSubmitting(true);
     const supabase = createClient();
@@ -110,13 +80,6 @@ export default function SubmitQuestionForm({ userId }: { userId: string }) {
     const cleanedHints = hints
       .filter((h) => h.text.trim() || h.image_url)
       .map((h) => ({ text: h.text.trim(), image_url: h.image_url }));
-
-    const cleanedOptions =
-      format === "multiple_choice"
-        ? options
-            .filter((o) => o.text.trim())
-            .map((o) => ({ id: o.id, text: o.text.trim() }))
-        : [];
 
     const { error: insertError } = await supabase.from("questions").insert({
       author_id: userId,
@@ -130,9 +93,9 @@ export default function SubmitQuestionForm({ userId }: { userId: string }) {
       category,
       difficulty,
       qualification: qualification.trim() || null,
-      format,
-      options: cleanedOptions,
-      correct_option_id: format === "multiple_choice" ? correctOptionId : null,
+      format: "free_response",
+      options: [],
+      correct_option_id: null,
       source_text: sourceText.trim() || null,
       source_url: sourceUrl.trim() || null,
       status: "pending",
@@ -229,7 +192,7 @@ export default function SubmitQuestionForm({ userId }: { userId: string }) {
           </div>
           <div>
             <label className={labelCls} htmlFor="difficulty">
-              Difficulty (1–5)
+              Difficulty (1–10)
             </label>
             <select
               id="difficulty"
@@ -237,7 +200,7 @@ export default function SubmitQuestionForm({ userId }: { userId: string }) {
               onChange={(e) => setDifficulty(Number(e.target.value))}
               className={inputCls}
             >
-              {[1, 2, 3, 4, 5].map((n) => (
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
                 <option key={n} value={n}>
                   {n}
                 </option>
@@ -260,25 +223,9 @@ export default function SubmitQuestionForm({ userId }: { userId: string }) {
         </div>
       </section>
 
-      {/* Answer format */}
+      {/* Answer */}
       <section className={sectionCls}>
-        <h2 className={sectionTitleCls}>Answer format</h2>
-        <div className="flex gap-4 mb-4">
-          {(["free_response", "multiple_choice"] as Format[]).map((f) => (
-            <label key={f} className="flex items-center gap-2 text-sm">
-              <input
-                type="radio"
-                name="format"
-                checked={format === f}
-                onChange={() => setFormat(f)}
-              />
-              <span className="text-gray-800 dark:text-gray-200">
-                {f === "free_response" ? "Free response" : "Multiple choice"}
-              </span>
-            </label>
-          ))}
-        </div>
-
+        <h2 className={sectionTitleCls}>Answer</h2>
         <div className="flex flex-col gap-4">
           <div>
             <label className={labelCls} htmlFor="answerText">
@@ -300,40 +247,6 @@ export default function SubmitQuestionForm({ userId }: { userId: string }) {
             userId={userId}
           />
         </div>
-
-        {format === "multiple_choice" && (
-          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Options (leave blank to use fewer than 4)
-            </p>
-            <div className="flex flex-col gap-2">
-              {options.map((opt) => (
-                <div key={opt.id} className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="correct"
-                    checked={correctOptionId === opt.id}
-                    onChange={() => setCorrectOptionId(opt.id)}
-                    title="Mark as correct"
-                  />
-                  <span className="w-6 text-sm font-semibold uppercase text-gray-500 dark:text-gray-400">
-                    {opt.id}.
-                  </span>
-                  <input
-                    type="text"
-                    value={opt.text}
-                    onChange={(e) => updateOption(opt.id, e.target.value)}
-                    placeholder={`Option ${opt.id.toUpperCase()}`}
-                    className={inputCls}
-                  />
-                </div>
-              ))}
-            </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              Radio on the left marks which option is correct.
-            </p>
-          </div>
-        )}
       </section>
 
       {/* Explanation */}
@@ -376,8 +289,8 @@ export default function SubmitQuestionForm({ userId }: { userId: string }) {
         </div>
         {hints.length === 0 && (
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            No hints yet. Add one or more — they'll be revealed to users one at
-            a time.
+            No hints yet. Add one or more — they&apos;ll be revealed to users
+            one at a time.
           </p>
         )}
         <div className="flex flex-col gap-4">

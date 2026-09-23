@@ -39,7 +39,7 @@ export default async function MySubmissionsPage() {
 
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-900 py-6 px-4">
-      <div className="max-w-2xl mx-auto mb-6">
+      <div className="max-w-3xl mx-auto mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">
           My submissions
         </h1>
@@ -49,7 +49,7 @@ export default async function MySubmissionsPage() {
         </p>
       </div>
 
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-3xl mx-auto">
         {error ? (
           <div className="bg-white dark:bg-gray-800 border border-red-200 dark:border-red-900/40 rounded-xl p-4">
             <p className="text-sm text-red-600 dark:text-red-400">

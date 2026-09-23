@@ -14,7 +14,7 @@ export default async function SubmitPage() {
 
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-900 py-6 px-4">
-      <div className="max-w-2xl mx-auto mb-6">
+      <div className="max-w-3xl mx-auto mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">
           Submit a question
         </h1>
@@ -23,7 +23,7 @@ export default async function SubmitPage() {
         </p>
       </div>
 
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-3xl mx-auto">
         <SubmitQuestionForm userId={user.id} />
       </div>
     </main>

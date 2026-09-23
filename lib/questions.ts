@@ -3,6 +3,28 @@ import type { Question } from "@/types/question";
 
 const DEFAULT_PAGE_SIZE = 10;
 
+const QUESTION_COLUMNS = [
+  "id",
+  "author_id",
+  "created_at",
+  "question_text",
+  "question_image_url",
+  "answer_text",
+  "answer_image_url",
+  "explanation_text",
+  "explanation_image_url",
+  "hints",
+  "category",
+  "difficulty",
+  "qualification",
+  "source_text",
+  "source_url",
+  "status",
+  "rejection_reason",
+  "featured",
+  "featured_order",
+].join(",");
+
 export type QuestionsPage = {
   questions: Question[];
   total: number;
@@ -20,7 +42,7 @@ export async function getQuestions(
 
   const { data, error, count } = await supabase
     .from("questions")
-    .select("*", { count: "exact" })
+    .select(QUESTION_COLUMNS, { count: "exact" })
     .eq("status", "published")
     .order("created_at", { ascending: false })
     .range(from, to);
@@ -32,7 +54,7 @@ export async function getQuestions(
 
   const total = count ?? 0;
   return {
-    questions: (data ?? []) as Question[],
+    questions: (data ?? []) as unknown as Question[],
     total,
     totalPages: Math.max(1, Math.ceil(total / pageSize)),
     page,

@@ -3,7 +3,7 @@ import QuestionCard from "@/components/QuestionCard";
 import Pagination from "@/components/Pagination";
 import { getQuestions } from "@/lib/questions";
 
-export const revalidate = 60;
+export const revalidate = 300;
 
 export default async function Home({
   searchParams,
@@ -22,16 +22,16 @@ export default async function Home({
 
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-900 py-6 px-4 transition-colors">
-      <div className="max-w-2xl mx-auto mb-6">
+      <div className="max-w-3xl mx-auto mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">
-          IQ Questions
+          BrainBench
         </h1>
         <p className="text-sm text-gray-500 dark:text-gray-400">
           {total} {total === 1 ? "question" : "questions"} available
         </p>
       </div>
 
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-3xl mx-auto">
         {questions.length === 0 ? (
           <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-8 text-center">
             <p className="text-gray-600 dark:text-gray-400">

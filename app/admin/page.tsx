@@ -14,7 +14,6 @@ export default async function AdminPage() {
 
   const supabase = await createClient();
 
-  // Fetch pending questions plus author usernames in one go.
   const { data: questions, error } = await supabase
     .from("questions")
     .select("*")
@@ -24,7 +23,7 @@ export default async function AdminPage() {
   if (error) {
     return (
       <main className="min-h-screen bg-gray-50 dark:bg-gray-900 py-6 px-4">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-3xl mx-auto">
           <p className="text-red-600 dark:text-red-400">
             Failed to load pending questions: {error.message}
           </p>
@@ -33,7 +32,6 @@ export default async function AdminPage() {
     );
   }
 
-  // Fetch usernames for the authors
   const authorIds = Array.from(
     new Set((questions ?? []).map((q) => q.author_id).filter(Boolean)),
   ) as string[];
@@ -49,7 +47,7 @@ export default async function AdminPage() {
 
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-900 py-6 px-4">
-      <div className="max-w-2xl mx-auto mb-6">
+      <div className="max-w-3xl mx-auto mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">
           Admin · Pending questions
         </h1>
@@ -66,7 +64,7 @@ export default async function AdminPage() {
         </Link>
       </div>
 
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-3xl mx-auto">
         {!questions || questions.length === 0 ? (
           <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-8 text-center">
             <p className="text-gray-600 dark:text-gray-400">
@@ -77,7 +75,7 @@ export default async function AdminPage() {
           questions.map((q) => (
             <AdminQuestionRow
               key={q.id}
-              question={q as Question}
+              question={q as unknown as Question}
               authorUsername={
                 q.author_id ? (usernameMap.get(q.author_id) ?? null) : null
               }

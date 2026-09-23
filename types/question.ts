@@ -3,16 +3,19 @@ export type Hint = {
   image_url: string | null;
 };
 
-export type QuestionOption = {
-  id: string;
-  text: string;
-};
-
-export type QuestionFormat = "free_response" | "multiple_choice";
 export type QuestionStatus = "draft" | "pending" | "published" | "rejected";
+export type QuestionCategory =
+  | "verbal"
+  | "numerical"
+  | "spatial"
+  | "logical"
+  | "pattern"
+  | "memory";
 
 export type Question = {
   id: string;
+  author_id: string | null;
+  created_at: string;
   question_text: string | null;
   question_image_url: string | null;
   answer_text: string | null;
@@ -20,20 +23,13 @@ export type Question = {
   explanation_text: string | null;
   explanation_image_url: string | null;
   hints: Hint[];
-  category:
-    | "verbal"
-    | "numerical"
-    | "spatial"
-    | "logical"
-    | "pattern"
-    | "memory";
+  category: QuestionCategory;
   difficulty: number;
   qualification: string | null;
-  format: QuestionFormat;
-  options: QuestionOption[];
-  correct_option_id: string | null;
-  source_text: string | null; // new
-  source_url: string | null; // new
+  source_text: string | null;
+  source_url: string | null;
   status: QuestionStatus;
   rejection_reason: string | null;
+  featured: boolean;
+  featured_order: number | null;
 };

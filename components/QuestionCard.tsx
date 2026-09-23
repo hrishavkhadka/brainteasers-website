@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Question } from "@/types/question";
+import type { Question } from "@/types/question";
 
 const categoryColors: Record<Question["category"], string> = {
   verbal:
@@ -18,36 +18,12 @@ const categoryColors: Record<Question["category"], string> = {
 export default function QuestionCard({ question }: { question: Question }) {
   const [visibleHints, setVisibleHints] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
-  const [selectedOption, setSelectedOption] = useState<string | null>(null);
 
   const totalHints = question.hints.length;
   const hasMoreHints = visibleHints < totalHints;
-  const isMCQ =
-    question.format === "multiple_choice" && question.options.length > 0;
-  const correctId = question.correct_option_id;
-
-  function optionClasses(optionId: string) {
-    const base =
-      "w-full text-left px-3 py-2 rounded-lg border transition-colors text-sm sm:text-base flex items-center justify-between gap-2";
-    const idle =
-      "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 hover:border-gray-400 dark:hover:border-gray-500";
-    const selected =
-      "bg-blue-50 dark:bg-blue-900/30 border-blue-400 dark:border-blue-500 text-blue-900 dark:text-blue-100";
-    const correct =
-      "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-500 dark:border-emerald-500 text-emerald-900 dark:text-emerald-100";
-    const wrong =
-      "bg-red-50 dark:bg-red-900/30 border-red-400 dark:border-red-500 text-red-900 dark:text-red-100";
-
-    if (!showAnswer) {
-      return `${base} ${selectedOption === optionId ? selected : idle}`;
-    }
-    if (optionId === correctId) return `${base} ${correct}`;
-    if (optionId === selectedOption) return `${base} ${wrong}`;
-    return `${base} ${idle} opacity-60`;
-  }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-5 max-w-2xl w-full mx-auto mb-4 transition-colors">
+    <article className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6 w-full mx-auto mb-4 transition-colors">
       {/* Badges */}
       <div className="flex flex-wrap gap-2 mb-3">
         <span
@@ -56,7 +32,7 @@ export default function QuestionCard({ question }: { question: Question }) {
           {question.category}
         </span>
         <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
-          Level {question.difficulty}
+          Level {question.difficulty}/10
         </span>
         {question.qualification && (
           <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
@@ -65,56 +41,22 @@ export default function QuestionCard({ question }: { question: Question }) {
         )}
       </div>
 
-      {/* Question */}
+      {/* Question text */}
       {question.question_text && (
-        <p className="text-gray-900 dark:text-gray-100 text-base sm:text-lg mb-3 leading-relaxed">
+        <p className="text-gray-900 dark:text-gray-100 text-base sm:text-lg mb-3 leading-relaxed whitespace-pre-wrap">
           {question.question_text}
         </p>
       )}
-      {question.question_image_url && (
-        <img
-          src={question.question_image_url}
-          alt="Question diagram"
-          className="rounded-lg mb-3 w-full"
-          loading="lazy"
-        />
-      )}
 
-      {/* MCQ options */}
-      {isMCQ && (
-        <div className="flex flex-col gap-2 mb-3">
-          {question.options.map((opt) => (
-            <button
-              key={opt.id}
-              type="button"
-              disabled={showAnswer}
-              onClick={() => setSelectedOption(opt.id)}
-              className={optionClasses(opt.id)}
-            >
-              <span>
-                <span className="font-semibold mr-2 uppercase">{opt.id}.</span>
-                {opt.text}
-              </span>
-              {showAnswer && opt.id === correctId && (
-                <span
-                  aria-label="correct"
-                  className="text-emerald-600 dark:text-emerald-400 font-bold"
-                >
-                  ✓
-                </span>
-              )}
-              {showAnswer &&
-                opt.id === selectedOption &&
-                opt.id !== correctId && (
-                  <span
-                    aria-label="incorrect"
-                    className="text-red-600 dark:text-red-400 font-bold"
-                  >
-                    ✗
-                  </span>
-                )}
-            </button>
-          ))}
+      {/* Question image */}
+      {question.question_image_url && (
+        <div className="mb-3 flex justify-center">
+          <img
+            src={question.question_image_url}
+            alt="Question diagram"
+            className="max-h-96 w-auto max-w-full object-contain rounded-lg"
+            loading="lazy"
+          />
         </div>
       )}
 
@@ -126,19 +68,21 @@ export default function QuestionCard({ question }: { question: Question }) {
           </p>
           {question.hints.slice(0, visibleHints).map((hint, i) => (
             <div key={i} className="mb-2 last:mb-0">
-              <p className="text-sm text-amber-900 dark:text-amber-100">
+              <p className="text-sm text-amber-900 dark:text-amber-100 whitespace-pre-wrap">
                 {visibleHints > 1 && (
                   <span className="font-semibold mr-1">{i + 1}.</span>
                 )}
                 {hint.text}
               </p>
               {hint.image_url && (
-                <img
-                  src={hint.image_url}
-                  alt={`Hint ${i + 1}`}
-                  className="rounded mt-2 w-full"
-                  loading="lazy"
-                />
+                <div className="mt-2 flex justify-center">
+                  <img
+                    src={hint.image_url}
+                    alt={`Hint ${i + 1}`}
+                    className="max-h-72 w-auto max-w-full object-contain rounded"
+                    loading="lazy"
+                  />
+                </div>
               )}
             </div>
           ))}
@@ -172,33 +116,39 @@ export default function QuestionCard({ question }: { question: Question }) {
       {showAnswer && (
         <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
           {question.answer_text && (
-            <p className="text-base font-semibold text-emerald-800 dark:text-emerald-300 mb-2">
+            <p className="text-base font-semibold text-emerald-800 dark:text-emerald-300 mb-2 whitespace-pre-wrap">
               {question.answer_text}
             </p>
           )}
           {question.answer_image_url && (
-            <img
-              src={question.answer_image_url}
-              alt="Answer"
-              className="rounded-lg mb-2 w-full"
-              loading="lazy"
-            />
+            <div className="mb-2 flex justify-center">
+              <img
+                src={question.answer_image_url}
+                alt="Answer"
+                className="max-h-80 w-auto max-w-full object-contain rounded-lg"
+                loading="lazy"
+              />
+            </div>
           )}
           {question.explanation_text && (
-            <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+            <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-wrap">
               {question.explanation_text}
             </p>
           )}
           {question.explanation_image_url && (
-            <img
-              src={question.explanation_image_url}
-              alt="Explanation"
-              className="rounded-lg mt-2 w-full"
-              loading="lazy"
-            />
+            <div className="mt-2 flex justify-center">
+              <img
+                src={question.explanation_image_url}
+                alt="Explanation"
+                className="max-h-80 w-auto max-w-full object-contain rounded-lg"
+                loading="lazy"
+              />
+            </div>
           )}
         </div>
       )}
+
+      {/* Source */}
       {(question.source_text || question.source_url) && (
         <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700/60">
           <p className="text-xs text-gray-400 dark:text-gray-500">
@@ -218,6 +168,6 @@ export default function QuestionCard({ question }: { question: Question }) {
           </p>
         </div>
       )}
-    </div>
+    </article>
   );
 }
