@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import QuestionCard from "@/components/QuestionCard";
 import Pagination from "@/components/Pagination";
 import { getQuestions } from "@/lib/questions";
+import { createClient } from "@/lib/supabase/server";
+import { getUserVotes } from "@/lib/votes-server";
 
 export const revalidate = 300;
 
@@ -18,6 +20,20 @@ export default async function Home({
 
   if (page > 1 && page > totalPages) {
     redirect("/");
+  }
+
+  // Fetch user's votes for these questions
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  let userVotes: Record<string, 1 | -1> = {};
+  if (user && questions.length > 0) {
+    userVotes = await getUserVotes(
+      user.id,
+      questions.map((q) => q.id),
+    );
   }
 
   return (
@@ -39,7 +55,14 @@ export default async function Home({
             </p>
           </div>
         ) : (
-          questions.map((q) => <QuestionCard key={q.id} question={q} />)
+          questions.map((q) => (
+            <QuestionCard
+              key={q.id}
+              question={q}
+              userVote={userVotes[q.id] ?? null}
+              userId={user?.id ?? null}
+            />
+          ))
         )}
 
         <Pagination currentPage={page} totalPages={totalPages} />

@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import type { Question } from "@/types/question";
+import type { VoteValue } from "@/lib/votes";
 import ZoomableImage from "./ZoomableImage";
+import VoteButtons from "./VoteButtons";
 
 const categoryColors: Record<Question["category"], string> = {
   verbal:
@@ -16,7 +18,15 @@ const categoryColors: Record<Question["category"], string> = {
   memory: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
 };
 
-export default function QuestionCard({ question }: { question: Question }) {
+export default function QuestionCard({
+  question,
+  userVote = null,
+  userId = null,
+}: {
+  question: Question;
+  userVote?: VoteValue | null;
+  userId?: string | null;
+}) {
   const [visibleHints, setVisibleHints] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
 
@@ -39,6 +49,16 @@ export default function QuestionCard({ question }: { question: Question }) {
             {question.qualification}
           </span>
         )}
+      </div>
+
+      <div className="mb-3">
+        <VoteButtons
+          questionId={question.id}
+          initialUpvotes={question.upvotes}
+          initialDownvotes={question.downvotes}
+          initialUserVote={userVote}
+          userId={userId}
+        />
       </div>
 
       {question.question_text && (

@@ -32,4 +32,6 @@ export type Question = {
   rejection_reason: string | null;
   featured: boolean;
   featured_order: number | null;
+  upvotes: number;
+  downvotes: number;
 };

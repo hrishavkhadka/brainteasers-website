@@ -23,6 +23,8 @@ const QUESTION_COLUMNS = [
   "rejection_reason",
   "featured",
   "featured_order",
+  "upvotes",
+  "downvotes",
 ].join(",");
 
 export type QuestionsPage = {
