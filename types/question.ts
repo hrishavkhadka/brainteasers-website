@@ -3,7 +3,12 @@ export type Hint = {
   image_url: string | null;
 };
 
-export type QuestionStatus = "draft" | "pending" | "published" | "rejected";
+export type QuestionStatus =
+  | "draft"
+  | "pending"
+  | "published"
+  | "rejected"
+  | "removed";
 export type QuestionCategory =
   | "verbal"
   | "numerical"

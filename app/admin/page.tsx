@@ -64,6 +64,12 @@ export default async function AdminPage() {
           </div>
           <div className="flex gap-3">
             <Link
+              href="/admin/reports"
+              className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              Reports →
+            </Link>
+            <Link
               href="/admin/users"
               className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
             >

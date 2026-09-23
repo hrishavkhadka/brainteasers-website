@@ -10,6 +10,7 @@ const statusStyles: Record<QuestionStatus, string> = {
   published:
     "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200",
   rejected: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200",
+  removed: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200",
 };
 
 const statusLabels: Record<QuestionStatus, string> = {
@@ -17,6 +18,7 @@ const statusLabels: Record<QuestionStatus, string> = {
   pending: "Pending review",
   published: "Published",
   rejected: "Rejected",
+  removed: "Removed by moderator",
 };
 
 export const dynamic = "force-dynamic";
@@ -110,6 +112,13 @@ export default async function MySubmissionsPage() {
                       {typed.rejection_reason}
                     </p>
                   </div>
+                )}
+
+                {typed.status === "removed" && (
+                  <p className="text-xs text-red-600 dark:text-red-400 mt-2">
+                    This question was removed by a moderator and no longer
+                    appears on the site.
+                  </p>
                 )}
 
                 {typed.status === "published" && (
