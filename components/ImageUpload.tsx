@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { uploadQuestionImage, deleteQuestionImage } from "@/lib/storage";
+import { uploadQuestionImage } from "@/lib/storage";
+import ZoomableImage from "./ZoomableImage";
 
 export default function ImageUpload({
   label,
@@ -26,8 +27,12 @@ export default function ImageUpload({
       setError("Please select an image file.");
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      setError("Image must be under 5 MB.");
+    if (file.type === "image/svg+xml") {
+      setError("SVG files are not supported. Use PNG, JPEG, or WebP.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setError("Image must be under 10 MB.");
       return;
     }
 
@@ -46,14 +51,11 @@ export default function ImageUpload({
   async function handleRemove() {
     if (!value) return;
     const urlToDelete = value;
-
-    // Clear the UI first so the user isn't stuck if deletion fails.
     onChange(null);
-
     try {
+      const { deleteQuestionImage } = await import("@/lib/storage");
       await deleteQuestionImage(urlToDelete);
     } catch (e) {
-      // Non-fatal — the file becomes an orphan. Log and continue.
       console.error("Failed to delete image from storage:", e);
     }
   }
@@ -66,15 +68,15 @@ export default function ImageUpload({
 
       {value ? (
         <div className="relative inline-block">
-          <img
+          <ZoomableImage
             src={value}
             alt="Uploaded"
-            className="max-h-40 rounded-lg border border-gray-200 dark:border-gray-700"
+            imgClassName="max-h-40 rounded-lg border border-gray-200 dark:border-gray-700"
           />
           <button
             type="button"
             onClick={handleRemove}
-            className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-600 text-white text-xs font-bold flex items-center justify-center hover:bg-red-700"
+            className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-600 text-white text-xs font-bold flex items-center justify-center hover:bg-red-700 z-10"
             aria-label="Remove image"
           >
             ×
@@ -85,14 +87,17 @@ export default function ImageUpload({
           <input
             ref={inputRef}
             type="file"
-            accept="image/*"
+            accept="image/png,image/jpeg,image/webp,image/gif"
             onChange={(e) => handleFile(e.target.files?.[0])}
             disabled={uploading}
             className="block w-full text-sm text-gray-600 dark:text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-gray-100 dark:file:bg-gray-700 file:text-gray-700 dark:file:text-gray-200 hover:file:bg-gray-200 dark:hover:file:bg-gray-600 disabled:opacity-60"
           />
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+            Up to 10 MB. Images are compressed automatically.
+          </p>
           {uploading && (
             <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-              Uploading...
+              Compressing & uploading...
             </p>
           )}
         </div>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { Question } from "@/types/question";
+import ZoomableImage from "./ZoomableImage";
 
 const categoryColors: Record<Question["category"], string> = {
   verbal:
@@ -24,7 +25,6 @@ export default function QuestionCard({ question }: { question: Question }) {
 
   return (
     <article className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6 w-full mx-auto mb-4 transition-colors">
-      {/* Badges */}
       <div className="flex flex-wrap gap-2 mb-3">
         <span
           className={`text-xs font-medium px-2.5 py-1 rounded-full ${categoryColors[question.category]}`}
@@ -41,26 +41,22 @@ export default function QuestionCard({ question }: { question: Question }) {
         )}
       </div>
 
-      {/* Question text */}
       {question.question_text && (
         <p className="text-gray-900 dark:text-gray-100 text-base sm:text-lg mb-3 leading-relaxed whitespace-pre-wrap">
           {question.question_text}
         </p>
       )}
 
-      {/* Question image */}
       {question.question_image_url && (
         <div className="mb-3 flex justify-center">
-          <img
+          <ZoomableImage
             src={question.question_image_url}
             alt="Question diagram"
-            className="max-h-96 w-auto max-w-full object-contain rounded-lg"
-            loading="lazy"
+            imgClassName="max-h-96 w-auto max-w-full object-contain rounded-lg"
           />
         </div>
       )}
 
-      {/* Hints */}
       {visibleHints > 0 && (
         <div className="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-400 dark:border-amber-500 p-3 mb-3 rounded-r-lg">
           <p className="text-xs font-semibold text-amber-800 dark:text-amber-300 uppercase tracking-wide mb-2">
@@ -76,11 +72,10 @@ export default function QuestionCard({ question }: { question: Question }) {
               </p>
               {hint.image_url && (
                 <div className="mt-2 flex justify-center">
-                  <img
+                  <ZoomableImage
                     src={hint.image_url}
                     alt={`Hint ${i + 1}`}
-                    className="max-h-72 w-auto max-w-full object-contain rounded"
-                    loading="lazy"
+                    imgClassName="max-h-72 w-auto max-w-full object-contain rounded"
                   />
                 </div>
               )}
@@ -89,7 +84,6 @@ export default function QuestionCard({ question }: { question: Question }) {
         </div>
       )}
 
-      {/* Buttons */}
       <div className="flex flex-wrap gap-2">
         {totalHints > 0 && hasMoreHints && (
           <button
@@ -112,7 +106,6 @@ export default function QuestionCard({ question }: { question: Question }) {
         </button>
       </div>
 
-      {/* Answer + Explanation */}
       {showAnswer && (
         <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
           {question.answer_text && (
@@ -122,11 +115,10 @@ export default function QuestionCard({ question }: { question: Question }) {
           )}
           {question.answer_image_url && (
             <div className="mb-2 flex justify-center">
-              <img
+              <ZoomableImage
                 src={question.answer_image_url}
                 alt="Answer"
-                className="max-h-80 w-auto max-w-full object-contain rounded-lg"
-                loading="lazy"
+                imgClassName="max-h-80 w-auto max-w-full object-contain rounded-lg"
               />
             </div>
           )}
@@ -137,18 +129,16 @@ export default function QuestionCard({ question }: { question: Question }) {
           )}
           {question.explanation_image_url && (
             <div className="mt-2 flex justify-center">
-              <img
+              <ZoomableImage
                 src={question.explanation_image_url}
                 alt="Explanation"
-                className="max-h-80 w-auto max-w-full object-contain rounded-lg"
-                loading="lazy"
+                imgClassName="max-h-80 w-auto max-w-full object-contain rounded-lg"
               />
             </div>
           )}
         </div>
       )}
 
-      {/* Source */}
       {(question.source_text || question.source_url) && (
         <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700/60">
           <p className="text-xs text-gray-400 dark:text-gray-500">
