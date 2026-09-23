@@ -3,8 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Comment } from "@/types/comment";
+import type { VoteValue } from "@/lib/comment-votes";
 import { updateComment, softDeleteComment } from "@/lib/comments-client";
 import CommentComposer from "./CommentComposer";
+import CommentVoteButtons from "./CommentVoteButtons";
+import ReportButton from "./ReportButton";
 import { useSignInPrompt } from "./auth/SignInPromptProvider";
 
 export default function CommentItem({
@@ -12,14 +15,17 @@ export default function CommentItem({
   replies,
   currentUserId,
   questionId,
+  userVotes = {},
   isReply = false,
 }: {
   comment: Comment;
   replies?: Comment[];
   currentUserId: string | null;
   questionId: string;
+  userVotes?: Record<string, VoteValue>;
   isReply?: boolean;
 }) {
+  const userVote = userVotes[comment.id] ?? null;
   const router = useRouter();
   const { open } = useSignInPrompt();
   const [editing, setEditing] = useState(false);
@@ -30,6 +36,8 @@ export default function CommentItem({
 
   const isOwn = currentUserId && comment.author_id === currentUserId;
   const canReply = !isReply && !comment.is_deleted;
+  const canVote = !comment.is_deleted;
+  const canReport = !isOwn && !comment.is_deleted;
 
   function handleReplyClick() {
     if (!currentUserId) {
@@ -143,7 +151,16 @@ export default function CommentItem({
         )}
 
         {!editing && (
-          <div className="flex gap-3 mt-2 text-xs">
+          <div className="flex flex-wrap items-center gap-3 mt-2 text-xs">
+            {canVote && (
+              <CommentVoteButtons
+                commentId={comment.id}
+                initialUpvotes={comment.upvotes}
+                initialDownvotes={comment.downvotes}
+                initialUserVote={userVote}
+                userId={currentUserId}
+              />
+            )}
             {canReply && (
               <button
                 type="button"
@@ -172,10 +189,16 @@ export default function CommentItem({
                 </button>
               </>
             )}
+            {canReport && (
+              <ReportButton
+                targetType="comment"
+                targetId={comment.id}
+                userId={currentUserId}
+              />
+            )}
           </div>
         )}
 
-        {/* Inline reply composer */}
         {showReplyBox && (
           <div className="mt-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700">
             <CommentComposer
@@ -189,7 +212,6 @@ export default function CommentItem({
           </div>
         )}
 
-        {/* Replies */}
         {replies && replies.length > 0 && (
           <div className="mt-4 pl-4 sm:pl-6 border-l-2 border-gray-100 dark:border-gray-700/60 flex flex-col gap-4">
             {replies.map((r) => (
@@ -198,6 +220,7 @@ export default function CommentItem({
                 comment={r}
                 currentUserId={currentUserId}
                 questionId={questionId}
+                userVotes={userVotes}
                 isReply
               />
             ))}

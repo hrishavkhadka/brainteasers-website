@@ -6,6 +6,7 @@ import type { Question } from "@/types/question";
 import type { VoteValue } from "@/lib/votes";
 import ZoomableImage from "./ZoomableImage";
 import VoteButtons from "./VoteButtons";
+import ReportButton from "./ReportButton";
 
 const categoryColors: Record<Question["category"], string> = {
   verbal:
@@ -188,14 +189,23 @@ export default function QuestionCard({
         </div>
       )}
 
-      <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700/60 flex items-center justify-between text-xs">
-        <Link
-          href={`/question/${question.id}`}
-          className="text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-        >
-          💬 {question.comment_count}{" "}
-          {question.comment_count === 1 ? "comment" : "comments"}
-        </Link>
+      <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700/60 flex items-center justify-between gap-2 text-xs">
+        <div className="flex items-center gap-3">
+          <Link
+            href={`/question/${question.id}`}
+            className="text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+          >
+            💬 {question.comment_count}{" "}
+            {question.comment_count === 1 ? "comment" : "comments"}
+          </Link>
+          {userId !== question.author_id && (
+            <ReportButton
+              targetType="question"
+              targetId={question.id}
+              userId={userId ?? null}
+            />
+          )}
+        </div>
         <span className="text-gray-400 dark:text-gray-500">
           {new Date(question.created_at).toLocaleDateString(undefined, {
             month: "short",

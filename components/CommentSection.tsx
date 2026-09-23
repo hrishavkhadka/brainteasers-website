@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCommentsForQuestion } from "@/lib/comments";
+import { getUserCommentVotes } from "@/lib/comment-votes-server";
+import type { VoteValue } from "@/lib/comment-votes";
 import CommentComposer from "./CommentComposer";
 import CommentItem from "./CommentItem";
 import type { Comment } from "@/types/comment";
@@ -16,9 +18,16 @@ export default async function CommentSection({
 
   const comments = await getCommentsForQuestion(questionId);
 
+  let userVotes: Record<string, VoteValue> = {};
+  if (user && comments.length > 0) {
+    userVotes = await getUserCommentVotes(
+      user.id,
+      comments.map((c) => c.id),
+    );
+  }
+
   const topLevel = comments.filter((c) => c.parent_id === null);
 
-  // Build reply map: parentId -> [replies]
   const repliesByParent = new Map<string, Comment[]>();
   for (const c of comments) {
     if (c.parent_id) {
@@ -28,7 +37,6 @@ export default async function CommentSection({
     }
   }
 
-  // Count all non-deleted comments (matches questions.comment_count)
   const visibleCount = comments.filter((c) => !c.is_deleted).length;
 
   return (
@@ -57,6 +65,7 @@ export default async function CommentSection({
               replies={repliesByParent.get(c.id) ?? []}
               currentUserId={user?.id ?? null}
               questionId={questionId}
+              userVotes={userVotes}
             />
           ))}
         </div>
