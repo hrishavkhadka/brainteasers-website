@@ -54,9 +54,30 @@ export async function getQuestions(
     return { questions: [], total: 0, totalPages: 0, page };
   }
 
+  const rows = (data ?? []) as unknown as Question[];
+
+  // Fetch usernames for the authors of these questions (one extra query)
+  const authorIds = Array.from(
+    new Set(rows.map((r) => r.author_id).filter((id): id is string => !!id)),
+  );
+
+  const usernameMap = new Map<string, string>();
+  if (authorIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, username")
+      .in("id", authorIds);
+    profiles?.forEach((p) => usernameMap.set(p.id, p.username));
+  }
+
+  const questions: Question[] = rows.map((q) => ({
+    ...q,
+    authorUsername: q.author_id ? (usernameMap.get(q.author_id) ?? null) : null,
+  }));
+
   const total = count ?? 0;
   return {
-    questions: (data ?? []) as unknown as Question[],
+    questions,
     total,
     totalPages: Math.max(1, Math.ceil(total / pageSize)),
     page,

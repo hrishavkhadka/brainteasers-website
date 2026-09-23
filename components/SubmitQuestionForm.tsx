@@ -77,6 +77,32 @@ export default function SubmitQuestionForm({ userId }: { userId: string }) {
     setSubmitting(true);
     const supabase = createClient();
 
+    // Pre-check: is submission currently allowed?
+    const [{ data: settings }, { data: profile }] = await Promise.all([
+      supabase
+        .from("site_settings")
+        .select("submissions_paused")
+        .eq("id", 1)
+        .single(),
+      supabase
+        .from("profiles")
+        .select("can_submit, is_admin")
+        .eq("id", userId)
+        .single(),
+    ]);
+
+    const allowed =
+      profile?.is_admin === true ||
+      (!settings?.submissions_paused && profile?.can_submit !== false);
+
+    if (!allowed) {
+      setSubmitting(false);
+      setError("Submissions are paused at the moment. Please try again later.");
+      return;
+    }
+
+    setSubmitting(true);
+
     const cleanedHints = hints
       .filter((h) => h.text.trim() || h.image_url)
       .map((h) => ({ text: h.text.trim(), image_url: h.image_url }));
@@ -104,7 +130,18 @@ export default function SubmitQuestionForm({ userId }: { userId: string }) {
     setSubmitting(false);
 
     if (insertError) {
-      setError(insertError.message);
+      const msg = insertError.message ?? "";
+      if (
+        msg.includes("row-level security") ||
+        msg.includes("violates row-level") ||
+        insertError.code === "42501"
+      ) {
+        setError(
+          "Submissions are paused at the moment. Please try again later.",
+        );
+      } else {
+        setError(msg || "Submission failed. Please try again.");
+      }
       return;
     }
 

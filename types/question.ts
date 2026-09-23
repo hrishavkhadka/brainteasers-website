@@ -34,4 +34,6 @@ export type Question = {
   featured_order: number | null;
   upvotes: number;
   downvotes: number;
+  /** Computed at fetch time from profiles. Not a DB column. */
+  authorUsername?: string | null;
 };

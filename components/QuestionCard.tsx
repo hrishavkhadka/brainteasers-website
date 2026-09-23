@@ -49,6 +49,11 @@ export default function QuestionCard({
             {question.qualification}
           </span>
         )}
+        {question.authorUsername && (
+          <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
+            by {question.authorUsername}
+          </span>
+        )}
       </div>
 
       <div className="mb-3">

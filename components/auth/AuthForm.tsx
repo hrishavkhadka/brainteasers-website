@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -23,6 +23,30 @@ export default function AuthForm({
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // NEW: track whether signups are globally paused
+  const [signupsPaused, setSignupsPaused] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase
+      .from("site_settings")
+      .select("signups_paused")
+      .eq("id", 1)
+      .single()
+      .then(({ data }) => {
+        setSignupsPaused(data?.signups_paused === true);
+      });
+  }, []);
+
+  function tryEnterSignup() {
+    if (signupsPaused) {
+      setError("Signups are paused at the moment. Please try again later.");
+      return;
+    }
+    setMode("signup");
+    setError(null);
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -31,6 +55,12 @@ export default function AuthForm({
     const supabase = createClient();
 
     if (mode === "signup") {
+      if (signupsPaused) {
+        setError("Signups are paused at the moment. Please try again later.");
+        setLoading(false);
+        return;
+      }
+
       if (!USERNAME_RE.test(username)) {
         setError(
           "Username must be 3–20 characters: letters, numbers, or underscore.",
@@ -58,7 +88,16 @@ export default function AuthForm({
       });
 
       if (error) {
-        setError(error.message);
+        const msg = error.message ?? "";
+        if (
+          msg.includes("SIGNUPS_PAUSED") ||
+          msg.includes("Database error saving new user") ||
+          msg.toLowerCase().includes("signups are paused")
+        ) {
+          setError("Signups are paused at the moment. Please try again later.");
+        } else {
+          setError(msg);
+        }
         setLoading(false);
         return;
       }
@@ -177,17 +216,25 @@ export default function AuthForm({
       <div className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
         {mode === "signin" ? (
           <>
-            No account?{" "}
+            No account? {/* NEW: disable / grayed-out state when paused */}
             <button
               type="button"
-              onClick={() => {
-                setMode("signup");
-                setError(null);
-              }}
-              className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+              onClick={tryEnterSignup}
+              disabled={signupsPaused === true}
+              className={
+                signupsPaused === true
+                  ? "text-gray-400 dark:text-gray-500 cursor-not-allowed font-medium"
+                  : "text-blue-600 dark:text-blue-400 hover:underline font-medium"
+              }
+              title={signupsPaused ? "Signups are paused" : undefined}
             >
               Sign up
             </button>
+            {signupsPaused === true && (
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Signups are paused at the moment.
+              </p>
+            )}
           </>
         ) : (
           <>
