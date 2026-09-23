@@ -13,7 +13,9 @@ export default function AdminQuestionRow({
   authorUsername: string | null;
 }) {
   const router = useRouter();
-  const [busy, setBusy] = useState<"approve" | "reject" | null>(null);
+  const [busy, setBusy] = useState<"approve" | "reject" | "remove" | null>(
+    null,
+  );
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState(false);
   const [rejecting, setRejecting] = useState(false);
@@ -48,6 +50,35 @@ export default function AdminQuestionRow({
       .update({
         status: "rejected",
         rejection_reason: reason.trim() || null,
+      })
+      .eq("id", question.id);
+
+    setBusy(null);
+
+    if (error) {
+      setError(error.message);
+      return;
+    }
+    router.refresh();
+  }
+
+  async function confirmRemove() {
+    if (
+      !confirm(
+        'Remove this question permanently from the site? The author will see it as "Removed by moderator".',
+      )
+    ) {
+      return;
+    }
+    setError(null);
+    setBusy("remove");
+    const supabase = createClient();
+
+    const { error } = await supabase
+      .from("questions")
+      .update({
+        status: "removed",
+        removed_at: new Date().toISOString(),
       })
       .eq("id", question.id);
 
@@ -190,6 +221,16 @@ export default function AdminQuestionRow({
             </button>
           </>
         )}
+
+        {/* Remove — separate, visually distinct, requires confirmation */}
+        <button
+          type="button"
+          disabled={busy !== null}
+          onClick={confirmRemove}
+          className="text-sm px-3 py-1.5 rounded-lg bg-red-900/10 dark:bg-red-900/30 text-red-800 dark:text-red-300 border border-red-300 dark:border-red-800 hover:bg-red-900/20 dark:hover:bg-red-900/50 disabled:opacity-60 ml-auto"
+        >
+          {busy === "remove" ? "Removing..." : "Remove"}
+        </button>
       </div>
     </div>
   );
