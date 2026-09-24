@@ -62,12 +62,18 @@ export default async function AdminPage() {
               awaiting review
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             <Link
               href="/admin/reports"
               className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
             >
               Reports →
+            </Link>
+            <Link
+              href="/admin/featured"
+              className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              Featured →
             </Link>
             <Link
               href="/admin/users"

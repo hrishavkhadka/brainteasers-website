@@ -38,6 +38,11 @@ export default function QuestionCard({
   return (
     <article className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6 w-full mx-auto mb-4 transition-colors">
       <div className="flex flex-wrap gap-2 mb-3">
+        {question.featured && (
+          <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200 flex items-center gap-1">
+            <span aria-hidden>★</span> Featured
+          </span>
+        )}
         <span
           className={`text-xs font-medium px-2.5 py-1 rounded-full ${categoryColors[question.category]}`}
         >

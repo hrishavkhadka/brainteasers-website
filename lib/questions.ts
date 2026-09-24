@@ -61,15 +61,22 @@ export type QuestionsPage = {
 export async function getQuestions(
   page: number = 1,
   pageSize: number = DEFAULT_PAGE_SIZE,
+  excludeIds: string[] = [],
 ): Promise<QuestionsPage> {
   const supabase = await createClient();
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
-  const { data, error, count } = await supabase
+  let query = supabase
     .from("questions")
     .select(QUESTION_COLUMNS, { count: "exact" })
-    .eq("status", "published")
+    .eq("status", "published");
+
+  if (excludeIds.length > 0) {
+    query = query.not("id", "in", `(${excludeIds.join(",")})`);
+  }
+
+  const { data, error, count } = await query
     .order("created_at", { ascending: false })
     .range(from, to);
 
