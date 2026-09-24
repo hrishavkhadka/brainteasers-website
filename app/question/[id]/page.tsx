@@ -5,6 +5,40 @@ import { getQuestion } from "@/lib/questions";
 import { getUserVotes } from "@/lib/votes-server";
 import QuestionCard from "@/components/QuestionCard";
 import CommentSection from "@/components/CommentSection";
+import type { Metadata } from "next";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const question = await getQuestion(id);
+
+  if (!question) {
+    return { title: "Question not found" };
+  }
+
+  const text = question.question_text?.trim() || "IQ question";
+  const preview = text.length > 140 ? text.slice(0, 140).trimEnd() + "…" : text;
+  const title = text.length > 60 ? text.slice(0, 60).trimEnd() + "…" : text;
+
+  return {
+    title,
+    description: `${preview} — practice on BrainBench.`,
+    openGraph: {
+      type: "article",
+      title,
+      description: preview,
+      url: `/question/${id}`,
+    },
+    twitter: {
+      card: "summary",
+      title,
+      description: preview,
+    },
+  };
+}
 
 export const revalidate = 300;
 

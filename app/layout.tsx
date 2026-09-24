@@ -2,14 +2,35 @@ import { Suspense } from "react";
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import { SignInPromptProvider } from "@/components/auth/SignInPromptProvider";
 import { SiteSettingsProvider } from "@/components/SiteSettingsProvider";
 import { createClient } from "@/lib/supabase/server";
 
+const SITE_URL = "https://brainbench67.vercel.app";
+
 export const metadata: Metadata = {
-  title: "BrainBench",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "BrainBench",
+    template: "%s · BrainBench",
+  },
   description:
-    "Practice IQ questions across verbal, numerical, spatial, and logical reasoning.",
+    "Practice IQ-style questions across verbal, numerical, spatial, and logical reasoning. Free, community-driven, with hints and explanations.",
+  openGraph: {
+    type: "website",
+    siteName: "BrainBench",
+    title: "BrainBench",
+    description:
+      "Practice IQ-style questions across verbal, numerical, spatial, and logical reasoning.",
+    url: SITE_URL,
+  },
+  twitter: {
+    card: "summary",
+    title: "BrainBench",
+    description:
+      "Practice IQ-style questions across verbal, numerical, spatial, and logical reasoning.",
+  },
 };
 
 export const viewport: Viewport = {
@@ -52,7 +73,7 @@ export default async function RootLayout({
           }}
         />
       </head>
-      <body className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors">
+      <body className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors">
         <SiteSettingsProvider>
           <SignInPromptProvider>
             <Suspense
@@ -66,7 +87,8 @@ export default async function RootLayout({
                 isAdmin={isAdmin}
               />
             </Suspense>
-            {children}
+            <div className="flex-1">{children}</div>
+            <Footer />
           </SignInPromptProvider>
         </SiteSettingsProvider>
       </body>
