@@ -51,6 +51,10 @@ async function attachUsernames(
   }));
 }
 
+function escapeLike(input: string): string {
+  return input.replace(/[%_\\]/g, "\\$&");
+}
+
 export type QuestionsPage = {
   questions: Question[];
   total: number;
@@ -82,6 +86,50 @@ export async function getQuestions(
 
   if (error) {
     console.error("getQuestions failed:", error);
+    return { questions: [], total: 0, totalPages: 0, page };
+  }
+
+  const rows = (data ?? []) as unknown as Question[];
+  const questions = await attachUsernames(supabase, rows);
+
+  const total = count ?? 0;
+  return {
+    questions,
+    total,
+    totalPages: Math.max(1, Math.ceil(total / pageSize)),
+    page,
+  };
+}
+
+export async function searchQuestions(
+  query: string,
+  page: number = 1,
+  pageSize: number = DEFAULT_PAGE_SIZE,
+  excludeIds: string[] = [],
+): Promise<QuestionsPage> {
+  const supabase = await createClient();
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  const escaped = escapeLike(query.trim());
+  const pattern = `%${escaped}%`;
+
+  let q = supabase
+    .from("questions")
+    .select(QUESTION_COLUMNS, { count: "exact" })
+    .eq("status", "published")
+    .ilike("search_text", pattern);
+
+  if (excludeIds.length > 0) {
+    q = q.not("id", "in", `(${excludeIds.join(",")})`);
+  }
+
+  const { data, error, count } = await q
+    .order("created_at", { ascending: false })
+    .range(from, to);
+
+  if (error) {
+    console.error("searchQuestions failed:", error);
     return { questions: [], total: 0, totalPages: 0, page };
   }
 

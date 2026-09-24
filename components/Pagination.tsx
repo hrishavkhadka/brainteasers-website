@@ -14,12 +14,24 @@ function getPageNumbers(current: number, total: number): (number | "...")[] {
   return pages;
 }
 
+function buildHref(page: number, extraParams: Record<string, string>): string {
+  const params = new URLSearchParams();
+  Object.entries(extraParams).forEach(([k, v]) => {
+    if (v) params.set(k, v);
+  });
+  if (page > 1) params.set("page", String(page));
+  const qs = params.toString();
+  return qs ? `/?${qs}` : "/";
+}
+
 export default function Pagination({
   currentPage,
   totalPages,
+  extraParams = {},
 }: {
   currentPage: number;
   totalPages: number;
+  extraParams?: Record<string, string>;
 }) {
   if (totalPages <= 1) return null;
 
@@ -35,7 +47,7 @@ export default function Pagination({
     >
       {currentPage > 1 ? (
         <Link
-          href={`/?page=${currentPage - 1}`}
+          href={buildHref(currentPage - 1, extraParams)}
           className={`${linkBase} bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700`}
         >
           ← Prev
@@ -68,7 +80,7 @@ export default function Pagination({
         ) : (
           <Link
             key={p}
-            href={`/?page=${p}`}
+            href={buildHref(p, extraParams)}
             className={`${linkBase} bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700`}
           >
             {p}
@@ -78,7 +90,7 @@ export default function Pagination({
 
       {currentPage < totalPages ? (
         <Link
-          href={`/?page=${currentPage + 1}`}
+          href={buildHref(currentPage + 1, extraParams)}
           className={`${linkBase} bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700`}
         >
           Next →

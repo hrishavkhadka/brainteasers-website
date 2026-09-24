@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Header from "@/components/Header";
@@ -54,11 +55,17 @@ export default async function RootLayout({
       <body className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors">
         <SiteSettingsProvider>
           <SignInPromptProvider>
-            <Header
-              user={user ? { id: user.id, email: user.email ?? "" } : null}
-              username={username}
-              isAdmin={isAdmin}
-            />
+            <Suspense
+              fallback={
+                <div className="h-16 border-b border-gray-200 dark:border-gray-800" />
+              }
+            >
+              <Header
+                user={user ? { id: user.id, email: user.email ?? "" } : null}
+                username={username}
+                isAdmin={isAdmin}
+              />
+            </Suspense>
             {children}
           </SignInPromptProvider>
         </SiteSettingsProvider>
