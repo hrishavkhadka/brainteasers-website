@@ -25,6 +25,7 @@ const QUESTION_COLUMNS = [
   "featured_order",
   "upvotes",
   "downvotes",
+  "score",
   "comment_count",
 ].join(",");
 
@@ -55,6 +56,18 @@ function escapeLike(input: string): string {
   return input.replace(/[%_\\]/g, "\\$&");
 }
 
+export type SortOption = "new" | "old" | "top";
+
+export type QueryOptions = {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  category?: string;
+  level?: number;
+  sort?: SortOption;
+  excludeIds?: string[];
+};
+
 export type QuestionsPage = {
   questions: Question[];
   total: number;
@@ -62,11 +75,19 @@ export type QuestionsPage = {
   page: number;
 };
 
-export async function getQuestions(
-  page: number = 1,
-  pageSize: number = DEFAULT_PAGE_SIZE,
-  excludeIds: string[] = [],
+export async function queryQuestions(
+  opts: QueryOptions = {},
 ): Promise<QuestionsPage> {
+  const {
+    page = 1,
+    pageSize = DEFAULT_PAGE_SIZE,
+    search,
+    category,
+    level,
+    sort = "new",
+    excludeIds = [],
+  } = opts;
+
   const supabase = await createClient();
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
@@ -76,60 +97,43 @@ export async function getQuestions(
     .select(QUESTION_COLUMNS, { count: "exact" })
     .eq("status", "published");
 
+  if (search && search.trim()) {
+    const escaped = escapeLike(search.trim());
+    query = query.ilike("search_text", `%${escaped}%`);
+  }
+
+  if (category) {
+    query = query.eq("category", category);
+  }
+
+  if (level) {
+    query = query.eq("difficulty", level);
+  }
+
   if (excludeIds.length > 0) {
     query = query.not("id", "in", `(${excludeIds.join(",")})`);
   }
 
-  const { data, error, count } = await query
-    .order("created_at", { ascending: false })
-    .range(from, to);
-
-  if (error) {
-    console.error("getQuestions failed:", error);
-    return { questions: [], total: 0, totalPages: 0, page };
+  // Primary sort, always with secondary score DESC for ties.
+  if (sort === "top") {
+    query = query
+      .order("score", { ascending: false })
+      .order("created_at", { ascending: false });
+  } else if (sort === "old") {
+    query = query
+      .order("created_at", { ascending: true })
+      .order("score", { ascending: false });
+  } else {
+    // 'new' (default)
+    query = query
+      .order("created_at", { ascending: false })
+      .order("score", { ascending: false });
   }
 
-  const rows = (data ?? []) as unknown as Question[];
-  const questions = await attachUsernames(supabase, rows);
-
-  const total = count ?? 0;
-  return {
-    questions,
-    total,
-    totalPages: Math.max(1, Math.ceil(total / pageSize)),
-    page,
-  };
-}
-
-export async function searchQuestions(
-  query: string,
-  page: number = 1,
-  pageSize: number = DEFAULT_PAGE_SIZE,
-  excludeIds: string[] = [],
-): Promise<QuestionsPage> {
-  const supabase = await createClient();
-  const from = (page - 1) * pageSize;
-  const to = from + pageSize - 1;
-
-  const escaped = escapeLike(query.trim());
-  const pattern = `%${escaped}%`;
-
-  let q = supabase
-    .from("questions")
-    .select(QUESTION_COLUMNS, { count: "exact" })
-    .eq("status", "published")
-    .ilike("search_text", pattern);
-
-  if (excludeIds.length > 0) {
-    q = q.not("id", "in", `(${excludeIds.join(",")})`);
-  }
-
-  const { data, error, count } = await q
-    .order("created_at", { ascending: false })
-    .range(from, to);
+  const { data, error, count } = await query.range(from, to);
 
   if (error) {
-    console.error("searchQuestions failed:", error);
+    console.error("queryQuestions failed:", error);
     return { questions: [], total: 0, totalPages: 0, page };
   }
 

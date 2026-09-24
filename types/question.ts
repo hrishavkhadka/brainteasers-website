@@ -39,6 +39,8 @@ export type Question = {
   featured_order: number | null;
   upvotes: number;
   downvotes: number;
+  score: number;
   comment_count: number;
+  removed_at?: string | null;
   authorUsername?: string | null;
 };

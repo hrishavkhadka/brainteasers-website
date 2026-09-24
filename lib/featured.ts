@@ -23,6 +23,7 @@ const FEATURED_COLUMNS = [
   "featured_order",
   "upvotes",
   "downvotes",
+  "score",
   "comment_count",
 ].join(",");
 
